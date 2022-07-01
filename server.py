@@ -1,4 +1,3 @@
-import os
 import sys
 from os import getenv
 from aio_pika import *
@@ -14,8 +13,8 @@ import dotenv
 
 
 dotenv.load_dotenv()
-db_login = os.getenv("db_login")
-db_passwd = os.getenv("db_passwd")
+db_login = getenv("db_login")
+db_passwd = getenv("db_passwd")
 engine = create_engine(f'postgresql+psycopg2://{db_login}:{db_passwd}@localhost/books')
 
 try:
@@ -33,6 +32,9 @@ clients_connections:List[User] = []                                             
 async def start_server():                                                                                   # Основная функция, запускающая сервер
     connection = await connect(host="localhost")
     channel = await connection.channel()
+
+    login = "user2"
+    passwd = "q"
 
     global exchange
     exchange = channel.default_exchange
