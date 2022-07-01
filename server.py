@@ -17,6 +17,14 @@ dotenv.load_dotenv()
 db_login = os.getenv("db_login")
 db_passwd = os.getenv("db_passwd")
 engine = create_engine(f'postgresql+psycopg2://{db_login}:{db_passwd}@localhost/books')
+
+try:
+    test_conn = engine.connect()                                                                            # проверям подключение к БД
+    test_conn.close()
+except Exception as error:
+    print("Не удалось подключится к базе данных")
+    sys.exit(0)
+
 session_fab = sessionmaker(bind=engine)
 exchange: AbstractExchange
 clients_connections:List[User] = []                                                                         # список, в котором хварнятся все активные пользователи
@@ -91,7 +99,7 @@ async def start_server():                                                       
 
                             await exchange.publish(                                                         # отправляем нужному клиенту сообщение, задав discon_id, чтоб знать, что это именно сообщение-отключение
                                 Message(
-                                    body=json.dumps(answer, cls=BookJson).encode(),
+                                    body=json.dumps(answer).encode(),
                                     correlation_id=client_to_discon.discon_id,
                                 ),
                                 routing_key=client_to_discon.queue,
