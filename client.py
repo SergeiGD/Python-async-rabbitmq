@@ -27,9 +27,7 @@ class RpcClient:
         self.is_admin = False
 
     async def connect(self, login, passwd) -> "RpcClient":
-        self.connection = await connect(
-            host="127.0.0.1", loop=self.loop,
-        )
+        self.connection = await connect(host="rabbit", loop=self.loop)
         self.channel = await self.connection.channel()
 
         self.callback_queue = await self.channel.declare_queue(exclusive=True)                                          # очередь, в которую приходят сообщения от сервера

@@ -1,0 +1,5 @@
+FROM postgres:12.11-alpine
+
+ADD ./config_files/db_dump.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 5432

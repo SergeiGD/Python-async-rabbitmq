@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: ./Dockerfiles/Dockerfile_postgres
+    container_name: db
+    image: db
+    restart: on-failure
+    environment:
+      POSTGRES_USER: ${db_login}
+      POSTGRES_PASSWORD: ${db_passwd}
+      POSTGRES_DB: books
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfiles/Dockerfile_app
+    image: app
+    container_name: app
+    restart: on-failure
+    environment:
+      db_login: ${db_login}
+      db_passwd: ${db_passwd}
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - rabbit
+
+  rabbit:
+    image: rabbitmq:latest
+    container_name: rabbit
+    restart: on-failure
+    ports:
+      - "5672:5672"
+
+
+

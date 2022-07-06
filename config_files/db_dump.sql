@@ -20,9 +20,7 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
---
--- Name: books; Type: TABLE; Schema: public; Owner: user12345
---
+
 
 CREATE TABLE public.books (
     id integer NOT NULL,
@@ -32,11 +30,7 @@ CREATE TABLE public.books (
 );
 
 
-ALTER TABLE public.books OWNER TO user12345;
 
---
--- Name: books_id_seq; Type: SEQUENCE; Schema: public; Owner: user12345
---
 
 CREATE SEQUENCE public.books_id_seq
     AS integer
@@ -47,18 +41,12 @@ CREATE SEQUENCE public.books_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.books_id_seq OWNER TO user12345;
 
---
--- Name: books_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: user12345
---
 
 ALTER SEQUENCE public.books_id_seq OWNED BY public.books.id;
 
 
---
--- Name: users; Type: TABLE; Schema: public; Owner: user12345
---
+
 
 CREATE TABLE public.users (
     id integer NOT NULL,
@@ -68,11 +56,7 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO user12345;
 
---
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: user12345
---
 
 CREATE SEQUENCE public.users_id_seq
     AS integer
@@ -83,32 +67,22 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.users_id_seq OWNER TO user12345;
 
---
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: user12345
---
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
---
--- Name: books id; Type: DEFAULT; Schema: public; Owner: user12345
---
+
 
 ALTER TABLE ONLY public.books ALTER COLUMN id SET DEFAULT nextval('public.books_id_seq'::regclass);
 
 
---
--- Name: users id; Type: DEFAULT; Schema: public; Owner: user12345
---
+
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
---
--- Data for Name: books; Type: TABLE DATA; Schema: public; Owner: user12345
---
+
 
 COPY public.books (id, name, author, pages) FROM stdin;
 1	asd	asd	4
@@ -118,9 +92,7 @@ COPY public.books (id, name, author, pages) FROM stdin;
 \.
 
 
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: user12345
---
+
 
 COPY public.users (id, login, passwd, is_admin) FROM stdin;
 2	user1	e6e07510d6531af5f403d1e6d0eb997855b6453488aaee6a9dd10ad5133f936a	f
@@ -129,45 +101,33 @@ COPY public.users (id, login, passwd, is_admin) FROM stdin;
 \.
 
 
---
--- Name: books_id_seq; Type: SEQUENCE SET; Schema: public; Owner: user12345
---
+
 
 SELECT pg_catalog.setval('public.books_id_seq', 6, true);
 
 
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: user12345
---
+
 
 SELECT pg_catalog.setval('public.users_id_seq', 5, true);
 
 
---
--- Name: books books_pkey; Type: CONSTRAINT; Schema: public; Owner: user12345
---
+
 
 ALTER TABLE ONLY public.books
     ADD CONSTRAINT books_pkey PRIMARY KEY (id);
 
 
---
--- Name: users users_login_key; Type: CONSTRAINT; Schema: public; Owner: user12345
---
+
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_login_key UNIQUE (login);
 
 
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: user12345
---
+
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
---
--- PostgreSQL database dump complete
---
+
 

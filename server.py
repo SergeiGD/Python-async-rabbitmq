@@ -10,20 +10,22 @@ from classes.user import *
 import asyncio
 import psutil
 import dotenv
-import signal
+from pathlib import Path
 
 
 dotenv.load_dotenv()
 db_login = getenv("db_login")
 db_passwd = getenv("db_passwd")
-engine = create_engine(f'postgresql+psycopg2://{db_login}:{db_passwd}@localhost/books')
+engine = create_engine(f'postgresql+psycopg2://{db_login}:{db_passwd}@db:5432/books')
+
 
 try:
     test_conn = engine.connect()                                                                            # проверям подключение к БД
     test_conn.close()
 except Exception as error:
     print("Не удалось подключится к базе данных")
-    sys.exit(0)
+    raise Exception('Ошибка подключения к базе данных')
+
 
 session_fab = sessionmaker(bind=engine)
 exchange: AbstractExchange
@@ -31,7 +33,7 @@ clients_connections:List[User] = []                                             
 
 
 async def start_server():                                                                                   # Основная функция, запускающая сервер
-    connection = await connect(host="localhost")
+    connection = await connect(host="rabbit")
     channel = await connection.channel()
 
     global exchange
@@ -62,6 +64,7 @@ async def start_server():                                                       
                     print(f"Клиент {current_client.login} отключается по собственному желанию")             # Клиент позже сам отправит сообщение об отключение, которое обработывает connection_handler()
 
                 if data["command"] == 'stop':                                                               # Получена команда остановки сервера
+                    print("123")
                     if current_client.is_admin:                                                             # Дополнительная проверка, есть ли права
                         print("Отключаем сервер")
                         for client in clients_connections:                                                  # Отправляем всем клиент сигнал об отключении
@@ -224,9 +227,8 @@ def read_books():                                                               
 
 
 if __name__ == "__main__":
-    procs = [p for p in psutil.process_iter() if 'python3' in p.name() and __file__ in p.cmdline()]         # проверяем (по активным процессам), чтоб был запущен только один экземпляр сервера
+    procs = [p for p in psutil.process_iter() if 'python' in p.name() and Path(__file__).name in p.cmdline()[1]]         # проверяем (по активным процессам), чтоб был запущен только один экземпляр сервера
     if len(procs) > 1:
         print('Экземпляр сервера уже запущен')
         sys.exit(1)
-
     asyncio.run(start_server())
