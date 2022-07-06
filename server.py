@@ -10,6 +10,7 @@ from classes.user import *
 import asyncio
 import psutil
 import dotenv
+import signal
 
 
 dotenv.load_dotenv()
@@ -33,15 +34,10 @@ async def start_server():                                                       
     connection = await connect(host="localhost")
     channel = await connection.channel()
 
-    login = "user2"
-    passwd = "q"
-
     global exchange
     exchange = channel.default_exchange
 
-    queue = await channel.declare_queue("rpc_queue")                                                        # очередь, в которую клиенту отправляют запросы
-
-    stop_server_queue = await channel.declare_queue("stop_server", exclusive=False, durable=False)          # очередь, в которую записываются сообщения об отключение сервера
+    queue = await channel.declare_queue("rpc_queue", durable=False)                                                        # очередь, в которую клиенту отправляют запросы
 
     connections_queue = await channel.declare_queue("connections_queue", exclusive=False, durable=False)    # очередь, в которую клиенты сообщают о подключении к серверу и отключении
 
@@ -67,13 +63,16 @@ async def start_server():                                                       
 
                 if data["command"] == 'stop':                                                               # Получена команда остановки сервера
                     if current_client.is_admin:                                                             # Дополнительная проверка, есть ли права
-                        for i in range(0, len(clients_connections)):                                        # т.к. rabbitmq сам выбирает кто при консьюмеров обработает сообщение и только один консьюмер может принять сообщение, то
-                            await exchange.publish(                                                         # отправим сразу несколько сообщение, чтоб их получили все (кол-во сообщений равно кол-ву клиентов)
-                                Message(body="Сервер был выключен...".encode()),
-                                routing_key=stop_server_queue.name
-                            )
                         print("Отключаем сервер")
-                        return                                                                              # после этого сервер отключается
+                        for client in clients_connections:                                                  # Отправляем всем клиент сигнал об отключении
+                            await exchange.publish(
+                                Message(
+                                    body="Сервер был отключен...".encode(),
+                                    correlation_id=client.discon_id,
+                                ),
+                                routing_key=client.queue,
+                            )
+                        return
                     else:
                         answer = "Эта операция доступна только админам"
 
@@ -101,7 +100,7 @@ async def start_server():                                                       
 
                             await exchange.publish(                                                         # отправляем нужному клиенту сообщение, задав discon_id, чтоб знать, что это именно сообщение-отключение
                                 Message(
-                                    body=json.dumps(answer).encode(),
+                                    body=f"Отключение по команде пользователя {current_client.login}".encode(),
                                     correlation_id=client_to_discon.discon_id,
                                 ),
                                 routing_key=client_to_discon.queue,

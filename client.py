@@ -15,7 +15,6 @@ class RpcClient:
     connection: AbstractConnection
     channel: AbstractChannel
     callback_queue: AbstractQueue
-    stop_server_queue: AbstractQueue
     connections_queue: AbstractQueue
     loop: asyncio.AbstractEventLoop
 
@@ -35,9 +34,6 @@ class RpcClient:
 
         self.callback_queue = await self.channel.declare_queue(exclusive=True)                                          # очередь, в которую приходят сообщения от сервера
         await self.callback_queue.consume(self.on_response)
-
-        self.stop_server_queue = await self.channel.declare_queue("stop_server", exclusive=False, durable=False)        # очередь, в которую приходят сообщения об откобчение сервера
-        await self.stop_server_queue.consume(self.on_server_stop, no_ack=True)
 
         self.connections_queue = await self.channel.declare_queue("connections_queue", exclusive=False, durable=False)  # очередь, в которую клиенты сообщают серверу о подключении и отключении
 
@@ -67,6 +63,7 @@ class RpcClient:
             return
 
         if message.correlation_id == self.disconnect_corid:                                                             # если сообщение с указанием отключится
+            print(message.body.decode())
             print("Принудительное отключение...")
             self.is_connected = False
             self.loop.stop()
@@ -85,11 +82,6 @@ class RpcClient:
 
         future: asyncio.Future = self.futures.pop(message.correlation_id)                                               # если сообщение не о подключении/отключении, то это просто ответ на какой-то
         future.set_result(message.body)                                                                                 # пользовательский запрос серверу и с помощью correlation_id узнаем на какой именно
-
-    def on_server_stop(self, message: AbstractIncomingMessage):                                                         # обработчки сообщений об отключении сервера
-        print(message.body.decode())
-        self.is_connected = False
-        self.loop.stop()
 
     async def call(self, msg: json) -> str:                                                                             # отправка запроса сервера
         correlation_id = str(uuid.uuid4())                                                                              # генерируем uuid, для последующей однозначной идентификации ответа
