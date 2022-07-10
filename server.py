@@ -61,6 +61,13 @@ async def start_server():                                                       
 
                 if current_client == None:
                     print("Не удалось индентифицировать отправителя...")
+                    await exchange.publish(
+                        Message(
+                            body="Серверу не удалось Вас индентифицировать...".encode(),
+                            correlation_id=message.correlation_id,
+                        ),
+                        routing_key=message.reply_to,
+                    )
                     continue
 
                 print(f"Обработка запроса клиента - {current_client.login}")
@@ -69,7 +76,6 @@ async def start_server():                                                       
                     print(f"Клиент {current_client.login} отключается по собственному желанию")             # Клиент позже сам отправит сообщение об отключение, которое обработывает connection_handler()
 
                 if data["command"] == 'stop':                                                               # Получена команда остановки сервера
-                    print("123")
                     if current_client.is_admin:                                                             # Дополнительная проверка, есть ли права
                         print("Отключаем сервер")
                         for client in clients_connections:                                                  # Отправляем всем клиент сигнал об отключении
