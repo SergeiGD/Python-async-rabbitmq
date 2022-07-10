@@ -15,12 +15,32 @@ services:
     ports:
       - "5432:5432"
 
-  app:
+  server_app:
+    tty: true
     build:
       context: .
       dockerfile: ./Dockerfiles/Dockerfile_app
-    image: app
-    container_name: app
+    image: server_app
+    container_name: server_app
+    restart: on-failure
+    ports:
+      - "9284:9284"
+    environment:
+      db_login: ${db_login}
+      db_passwd: ${db_passwd}
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - rabbit
+
+  loader_app:
+    tty: true
+    build:
+      context: .
+      dockerfile: ./Dockerfiles/Dockerfile_loader
+    image: loader_app
+    container_name: loader_app
     restart: on-failure
     environment:
       db_login: ${db_login}
@@ -30,6 +50,7 @@ services:
     depends_on:
       - db
       - rabbit
+      - server_app
 
   rabbit:
     image: rabbitmq:latest

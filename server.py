@@ -16,7 +16,7 @@ from pathlib import Path
 dotenv.load_dotenv()
 db_login = getenv("db_login")
 db_passwd = getenv("db_passwd")
-engine = create_engine(f'postgresql+psycopg2://{db_login}:{db_passwd}@db:5432/books')
+engine = create_engine(f'postgresql+psycopg2://{db_login}:{db_passwd}@db:5432/books', pool_size=51, max_overflow=0)
 
 
 try:
@@ -29,7 +29,7 @@ except Exception as error:
 
 session_fab = sessionmaker(bind=engine)
 exchange: AbstractExchange
-clients_connections:List[User] = []                                                                         # список, в котором хварнятся все активные пользователи
+clients_connections: List[User] = []                                                                         # список, в котором хварнятся все активные пользователи
 
 
 async def start_server():                                                                                   # Основная функция, запускающая сервер
@@ -39,7 +39,7 @@ async def start_server():                                                       
     global exchange
     exchange = channel.default_exchange
 
-    queue = await channel.declare_queue("rpc_queue", durable=False)                                                        # очередь, в которую клиенту отправляют запросы
+    queue = await channel.declare_queue("rpc_queue", durable=False)                                         # очередь, в которую клиенту отправляют запросы
 
     connections_queue = await channel.declare_queue("connections_queue", exclusive=False, durable=False)    # очередь, в которую клиенты сообщают о подключении к серверу и отключении
 
@@ -58,6 +58,11 @@ async def start_server():                                                       
                 data = json.loads(in_data)                                                                  # загружаем их в словарь
                 current_client = get_client_by_queue(message.reply_to)                                      # клиент, чье сообщение сейчас обрабатываем
                 answer = None                                                                               # будующий ответ клиенту
+
+                if current_client == None:
+                    print("Не удалось индентифицировать отправителя...")
+                    continue
+
                 print(f"Обработка запроса клиента - {current_client.login}")
 
                 if data["command"] == 'bye':                                                                # Получена команда отключение клиента
