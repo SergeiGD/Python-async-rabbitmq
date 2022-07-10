@@ -59,8 +59,15 @@ async def start_server():                                                       
                 current_client = get_client_by_queue(message.reply_to)                                      # клиент, чье сообщение сейчас обрабатываем
                 answer = None                                                                               # будующий ответ клиенту
 
-                if current_client == None:
-                    print("Не удалось индентифицировать отправителя...")
+                if current_client == None:                                                                  # если не смогли обнаружить клиента
+                    print("Не удалось индентифицировать отправителя...")                                    # в подключенных клиентах, то отправляем сообщение с ошибкой
+                    await exchange.publish(
+                        Message(
+                            body="Серверу не удалось Вас индентифицировать...".encode(),
+                            correlation_id=message.correlation_id,
+                        ),
+                        routing_key=message.reply_to,
+                    )
                     continue
 
                 print(f"Обработка запроса клиента - {current_client.login}")
