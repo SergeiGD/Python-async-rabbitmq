@@ -58,13 +58,17 @@ async def start_server():                                                       
                 data = json.loads(in_data)                                                                  # загружаем их в словарь
                 current_client = get_client_by_queue(message.reply_to)                                      # клиент, чье сообщение сейчас обрабатываем
                 answer = None                                                                               # будующий ответ клиенту
+
+                if current_client == None:
+                    print("Не удалось индентифицировать отправителя...")
+                    continue
+
                 print(f"Обработка запроса клиента - {current_client.login}")
 
                 if data["command"] == 'bye':                                                                # Получена команда отключение клиента
                     print(f"Клиент {current_client.login} отключается по собственному желанию")             # Клиент позже сам отправит сообщение об отключение, которое обработывает connection_handler()
 
                 if data["command"] == 'stop':                                                               # Получена команда остановки сервера
-                    print("123")
                     if current_client.is_admin:                                                             # Дополнительная проверка, есть ли права
                         print("Отключаем сервер")
                         for client in clients_connections:                                                  # Отправляем всем клиент сигнал об отключении
