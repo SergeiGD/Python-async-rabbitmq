@@ -48,7 +48,6 @@ async def make_task(login, passwd):                                         # с
         except Exception as error:
             print("Ошибка получения данных от сервера: ", error)
             print("Клиент выключается...")
-            await current_client.disconn_alert()                            # если не получается обработать ответ
             break
 
         out_info = login + ' - ' + datetime.datetime.now().strftime("%H:%M:%S") + ' - ' + content       # выводим ответ и доп. информацию
